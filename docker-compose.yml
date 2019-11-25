@@ -1,0 +1,71 @@
+version: '3.7'
+services:
+  prometheus:
+    image: strund3r/prometheus:2.14
+    volumes:
+      - prometheus_data:/var/lib/prometheus
+    ports:
+      - 9090:9090
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+  node-exporter:
+    image: strund3r/node-exporter:0.18.1
+    hostname: '{{.Node.ID}}'
+    volumes:
+      - /proc:/usr/proc
+      - /sys:/usr/sys
+      - /:/rootfs
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+    ports:
+      - 9100:9100
+
+  alertmanager:
+    image: strund3r/alertmanager:0.19
+    ports:
+      - 9093:9093
+
+  cadvisor:
+    image: google/cadvisor
+    hostname: '{{.Node.ID}}'
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+    ports:
+      - 8080:8080
+
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+    env_file:
+      - conf/grafana.config
+    ports:
+      - 3000:3000
+    deploy:   
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+
+volumes:
+    prometheus_data:
+    grafana_data:
