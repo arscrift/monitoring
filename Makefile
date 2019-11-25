@@ -4,7 +4,7 @@ init:
 	docker swarm init
 
 start:
-	docker stack deploy -c docker-compose.yml prometheus
+	docker stack deploy -c docker-compose.yml monitoring
 
 service:
 	docker service ls
