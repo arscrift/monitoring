@@ -56,7 +56,7 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     env_file:
-      - conf/grafana.config
+      - ./conf/grafana/grafana.config
     ports:
       - 3000:3000
     deploy:   
