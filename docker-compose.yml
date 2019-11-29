@@ -3,15 +3,28 @@ services:
   prometheus:
     image: strund3r/prometheus:2.14
     volumes:
+      - ./conf/prometheus/:/etc/prometheus/
       - prometheus_data:/var/lib/prometheus
-    ports:
-      - 9090:9090
+    networks:
+      - default
+      - traefik-public
     deploy:
       restart_policy:
         condition: on-failure
       placement:
         constraints:
           - node.role == manager
+    labels:
+        - traefik.frontend.rule=Host:prometheus.${DOMAIN?Variable DOMAIN not set}
+        - traefik.enable=true
+        - traefik.port=9090
+        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
+        - traefik.docker.network=traefik-public
+        # Traefik service that listens to HTTP
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # Traefik service that listens to HTTPS
+        - traefik.webservice.frontend.entryPoints=https
 
   node-exporter:
     image: strund3r/node-exporter:0.18.1
@@ -20,21 +33,41 @@ services:
       - /proc:/usr/proc
       - /sys:/usr/sys
       - /:/rootfs
+    networks:
+      - default
+      - traefik-public
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
-    ports:
-      - 9100:9100
+    labels:
+        - traefik.frontend.rule=Host:exporter.${DOMAIN?Variable DOMAIN not set}
+        - traefik.enable=true
+        - traefik.port=9100
+        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
+        - traefik.docker.network=traefik-public
+        # Traefik service that listens to HTTP
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # Traefik service that listens to HTTPS
+        - traefik.webservice.frontend.entryPoints=https
 
   alertmanager:
     image: strund3r/alertmanager:0.19
+    volumes:
+      - ./conf/alertmanager/:/etc/alertmanager/
     ports:
       - 9093:9093
+    networks:
+      - default
+      - traefik-public
 
   cadvisor:
     image: google/cadvisor
     hostname: '{{.Node.ID}}'
+    networks:
+      - default
+      - traefik-public
     privileged: true
     volumes:
       - /:/rootfs:ro
@@ -46,8 +79,19 @@ services:
       mode: global
       restart_policy:
         condition: on-failure
-    ports:
-      - 8080:8080
+    command: >
+      --port=8081
+    labels:
+        - traefik.frontend.rule=Host:cadvisor.${DOMAIN?Variable DOMAIN not set}
+        - traefik.enable=true
+        - traefik.port=8081
+        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
+        - traefik.docker.network=traefik-public
+        # Traefik service that listens to HTTP
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # Traefik service that listens to HTTPS
+        - traefik.webservice.frontend.entryPoints=https
 
   grafana:
     image: grafana/grafana
@@ -59,12 +103,26 @@ services:
       - ./conf/grafana/grafana.config
     ports:
       - 3000:3000
+    networks:
+      - default
+      - traefik-public
     deploy:   
       restart_policy:
         condition: on-failure
       placement:
         constraints:
           - node.role == manager
+    labels:
+        - traefik.frontend.rule=Host:grafana.${DOMAIN?Variable DOMAIN not set}
+        - traefik.enable=true
+        - traefik.port=3000
+        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
+        - traefik.docker.network=traefik-public
+        # Traefik service that listens to HTTP
+        - traefik.redirectorservice.frontend.entryPoints=http
+        - traefik.redirectorservice.frontend.redirect.entryPoint=https
+        # Traefik service that listens to HTTPS
+        - traefik.webservice.frontend.entryPoints=https
 
 volumes:
     prometheus_data:
