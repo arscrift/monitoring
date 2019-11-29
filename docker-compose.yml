@@ -6,8 +6,8 @@ services:
       - ./conf/prometheus/:/etc/prometheus/
       - prometheus_data:/var/lib/prometheus
     networks:
-      - default
       - traefik-public
+      - default
     deploy:
       restart_policy:
         condition: on-failure
@@ -15,7 +15,7 @@ services:
         constraints:
           - node.role == manager
     labels:
-        - traefik.frontend.rule=Host:prometheus.${DOMAIN?Variable DOMAIN not set}
+        - traefik.frontend.rule=Host:prometheus.arscrift.digital
         - traefik.enable=true
         - traefik.port=9090
         - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
@@ -34,14 +34,14 @@ services:
       - /sys:/usr/sys
       - /:/rootfs
     networks:
-      - default
       - traefik-public
+      - default
     deploy:
       mode: global
       restart_policy:
         condition: on-failure
     labels:
-        - traefik.frontend.rule=Host:exporter.${DOMAIN?Variable DOMAIN not set}
+        - traefik.frontend.rule=Host:exporter.arscrift.digital
         - traefik.enable=true
         - traefik.port=9100
         - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
@@ -59,15 +59,15 @@ services:
     ports:
       - 9093:9093
     networks:
-      - default
       - traefik-public
+      - default
 
   cadvisor:
     image: google/cadvisor
     hostname: '{{.Node.ID}}'
     networks:
-      - default
       - traefik-public
+      - default
     privileged: true
     volumes:
       - /:/rootfs:ro
@@ -82,7 +82,7 @@ services:
     command: >
       --port=8081
     labels:
-        - traefik.frontend.rule=Host:cadvisor.${DOMAIN?Variable DOMAIN not set}
+        - traefik.frontend.rule=Host:cadvisor.arscrift.digital
         - traefik.enable=true
         - traefik.port=8081
         - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
@@ -101,11 +101,9 @@ services:
       - grafana_data:/var/lib/grafana
     env_file:
       - ./conf/grafana/grafana.config
-    ports:
-      - 3000:3000
     networks:
-      - default
       - traefik-public
+      - default
     deploy:   
       restart_policy:
         condition: on-failure
@@ -113,7 +111,7 @@ services:
         constraints:
           - node.role == manager
     labels:
-        - traefik.frontend.rule=Host:grafana.${DOMAIN?Variable DOMAIN not set}
+        - traefik.frontend.rule=Host:grafana.arscrift.digital
         - traefik.enable=true
         - traefik.port=3000
         - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
@@ -123,6 +121,12 @@ services:
         - traefik.redirectorservice.frontend.redirect.entryPoint=https
         # Traefik service that listens to HTTPS
         - traefik.webservice.frontend.entryPoints=https
+
+networks:
+  traefik-public:
+    external: true
+  default:
+    external: false
 
 volumes:
     prometheus_data:
