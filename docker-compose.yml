@@ -14,17 +14,12 @@ services:
       placement:
         constraints:
           - node.role == manager
-    labels:
-        - traefik.frontend.rule=Host:prometheus.arscrift.digital
-        - traefik.enable=true
-        - traefik.port=9090
-        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
-        - traefik.docker.network=traefik-public
-        # Traefik service that listens to HTTP
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        # Traefik service that listens to HTTPS
-        - traefik.webservice.frontend.entryPoints=https
+      labels:
+        - "traefik.http.routers.prometheus.rule=Host(`prometheus.arscrift.digital`)"
+        - "traefik.http.routers.prometheus.service=prometheus"
+        - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+        - "traefik.http.routers.prometheus.tls.certresolver=leresolver"
+        - "traefik.http.routers.prometheus.entrypoints=websecure"
 
   node-exporter:
     image: strund3r/node-exporter:0.18.1
@@ -40,17 +35,12 @@ services:
       mode: global
       restart_policy:
         condition: on-failure
-    labels:
-        - traefik.frontend.rule=Host:exporter.arscrift.digital
-        - traefik.enable=true
-        - traefik.port=9100
-        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
-        - traefik.docker.network=traefik-public
-        # Traefik service that listens to HTTP
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        # Traefik service that listens to HTTPS
-        - traefik.webservice.frontend.entryPoints=https
+      labels:
+        - "traefik.http.routers.exporter.rule=Host(`exporter.arscrift.digital`)"
+        - "traefik.http.routers.exporter.service=exporter"
+        - "traefik.http.services.exporter.loadbalancer.server.port=9100"
+        - "traefik.http.routers.exporter.tls.certresolver=leresolver"
+        - "traefik.http.routers.exporter.entrypoints=websecure"
 
   alertmanager:
     image: strund3r/alertmanager:0.19
@@ -79,19 +69,14 @@ services:
       mode: global
       restart_policy:
         condition: on-failure
+      labels:
+        - "traefik.http.routers.cadvisor.rule=Host(`cadvisor.arscrift.digital`)"
+        - "traefik.http.routers.cadvisor.service=cadvisor"
+        - "traefik.http.services.cadvisor.loadbalancer.server.port=8081"
+        - "traefik.http.routers.cadvisor.tls.certresolver=leresolver"
+        - "traefik.http.routers.cadvisor.entrypoints=websecure"
     command: >
       --port=8081
-    labels:
-        - traefik.frontend.rule=Host:cadvisor.arscrift.digital
-        - traefik.enable=true
-        - traefik.port=8081
-        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
-        - traefik.docker.network=traefik-public
-        # Traefik service that listens to HTTP
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        # Traefik service that listens to HTTPS
-        - traefik.webservice.frontend.entryPoints=https
 
   grafana:
     image: grafana/grafana
@@ -104,23 +89,18 @@ services:
     networks:
       - traefik-public
       - default
-    deploy:   
+    deploy:
       restart_policy:
         condition: on-failure
       placement:
         constraints:
           - node.role == manager
-    labels:
-        - traefik.frontend.rule=Host:grafana.arscrift.digital
-        - traefik.enable=true
-        - traefik.port=3000
-        - traefik.tags=${TRAEFIK_PUBLIC_TAG:-traefik-public}
-        - traefik.docker.network=traefik-public
-        # Traefik service that listens to HTTP
-        - traefik.redirectorservice.frontend.entryPoints=http
-        - traefik.redirectorservice.frontend.redirect.entryPoint=https
-        # Traefik service that listens to HTTPS
-        - traefik.webservice.frontend.entryPoints=https
+      labels:
+        - "traefik.http.routers.grafana.rule=Host(`grafana.arscrift.digital`)"
+        - "traefik.http.routers.grafana.service=grafana"
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+        - "traefik.http.routers.grafana.tls.certresolver=leresolver"
+        - "traefik.http.routers.grafana.entrypoints=websecure"
 
 networks:
   traefik-public:
